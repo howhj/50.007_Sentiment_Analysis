@@ -1,95 +1,97 @@
 import argparse
 
 # Q1, no #UNK#
-def _emission(x, y, training_file):
-    ctr = 0
-    total = 0
-    with open(training_file, "r") as f:
-        for line in f.readlines():
-            temp = line.split()
-            if len(temp) == 2 and temp[1] == y:
-                total += 1
-                if temp[0] == x:
-                    ctr += 1
-    return ctr / total
-
-# Q2, with #UNK#
-def emission(x, y, k, training_file):
-    ctr = k if x == "#UNK#" else 0
-    total = 0
-    with open(training_file, "r") as f:
-        for line in f.readlines():
-            temp = line.split()
-            if len(temp) == 2 and temp[1] == y:
-                total += 1
-                if x != "#UNK#" and temp[0] == x:
-                    ctr += 1
-    total += k
-    return ctr / total
-
-# Q3
-def parse_train(k, training_file):
-    dct = {}
-    lst = []
+# Parse file and construct emission table first
+# Then look up values from it to calculate probability
+def _construct_emission_table(training_file):
+    etable = {}
+    wordlist = []
     with open(training_file, "r") as f:
         lines = f.readlines()
         for line in lines:
             temp = line.split()
             if len(temp) == 2:
                 x, y = temp[0], temp[1]
-                if not y in dct:
-                    dct[y] = {"count": 1 + k, "#UNK#": k}
+                if not y in etable:
+                    etable[y] = {"count": 1}
                 else:
-                    dct[y]["count"] += 1
+                    etable[y]["count"] += 1
 
-                if not x in dct[y]:
-                    dct[y][x] = 1
+                if not x in etable[y]:
+                    etable[y][x] = 1
                 else:
-                    dct[y][x] += 1
+                    etable[y][x] += 1
 
-                if x not in lst:
-                    lst.append(x)
-    return dct, lst
+                if x not in wordlist:
+                    wordlist.append(x)
+    return etable, wordlist
 
-# Uses data stored in memory instead
-def emission_dct(x, y, dct):
-    return dct[y][x] / dct[y]["count"]
+def emission(x, y, etable):
+    return etable[y][x] / etable[y]["count"]
 
-def sentiment_analysis(dct, wordlist, testing_file, output_file):
-    lst = []
+# Q2, with #UNK#
+# Reuses the emission() function from Q1
+def construct_emission_table(k, training_file):
+    etable = {}
+    wordlist = []
+    with open(training_file, "r") as f:
+        lines = f.readlines()
+        for line in lines:
+            temp = line.split()
+            if len(temp) == 2:
+                x, y = temp[0], temp[1]
+                if not y in etable:
+                    etable[y] = {"count": 1 + k, "#UNK#": k}
+                else:
+                    etable[y]["count"] += 1
+
+                if not x in etable[y]:
+                    etable[y][x] = 1
+                else:
+                    etable[y][x] += 1
+
+                if x not in wordlist:
+                    wordlist.append(x)
+    return etable, wordlist
+
+# Q3
+def sentiment_analysis(etable, wordlist, testing_file, output_file):
+    tagged = []
     probs = {}
-    for k in dct.keys():
+    for k in etable.keys():
         probs[k] = 0
 
     with open(testing_file, "r") as f:
         for line in f:
-            line = line.rstrip()
             # Determine token
-            if line == "":
-                lst.append("\n")
+            word = line.rstrip()
+            if word == "":
+                tagged.append("\n")
                 continue
-            elif line in wordlist:
-                x = line
+            elif word in wordlist:
+                x = word
             else:
                 x = "#UNK#"
 
             # Calculate emission probability for each tag
             for y in probs.keys():
-                probs[y] = emission_dct(x, y, dct) if x in dct[y] else 0
+                if x in etable[y]:
+                    probs[y] = emission(x, y, etable)
+                else:
+                    probs[y] = 0
 
             # Determine best matching tag
             max_prob = 0
-            best_tag = "#UNK"
+            best_tag = ""
             for k, v in probs.items():
                 if v > max_prob:
                     max_prob = v
                     best_tag = k
 
-            lst.append(f"{line} {best_tag}\n")
+            tagged.append(f"{word} {best_tag}\n")
 
     with open(output_file, "w") as fout:
-        fout.writelines(lst)
-
+        fout.writelines(tagged)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Part 1")
@@ -104,5 +106,5 @@ if __name__ == "__main__":
     testing_file = args.testing_file
     output_file = args.output_file
 
-    dct, lst = parse_train(k, training_file)
-    sentiment_analysis(dct, lst, testing_file, output_file)
+    etable, wordlist = construct_emission_table(k, training_file)
+    sentiment_analysis(etable, wordlist, testing_file, output_file)
