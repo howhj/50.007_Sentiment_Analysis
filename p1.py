@@ -1,3 +1,5 @@
+import argparse
+
 # Q1, no #UNK#
 def _emission(x, y, training_file):
     ctr = 0
@@ -64,6 +66,7 @@ def sentiment_analysis(dct, wordlist, testing_file, output_file):
             line = line.rstrip()
             # Determine token
             if line == "":
+                lst.append("\n")
                 continue
             elif line in wordlist:
                 x = line
@@ -88,16 +91,18 @@ def sentiment_analysis(dct, wordlist, testing_file, output_file):
         fout.writelines(lst)
 
 
-def __main__():
-    x = "#UNK#"
-    y = "O"
-    k = 1
-    training_file = "./EN/train"
-    testing_file = "./EN/dev.in"
-    output_file = "./EN/dev.p1.out"
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description = "Part 1")
+    parser.add_argument("k", type = int, help = "Smoothing factor.")
+    parser.add_argument("training_file", metavar = "train", type = str, help = "Path to the file with training data.")
+    parser.add_argument("testing_file", metavar = "test", type = str, help = "Path to the file with testing data.")
+    parser.add_argument("output_file", metavar = "out", type = str, help = "Path to the file for storing predicted results.")
 
-    #print(emission(x, y, k, training_file))
+    args = parser.parse_args()
+    k = args.k
+    training_file = args.training_file
+    testing_file = args.testing_file
+    output_file = args.output_file
+
     dct, lst = parse_train(k, training_file)
-    #print(emission_dct(x, y, dct))
-
     sentiment_analysis(dct, lst, testing_file, output_file)
