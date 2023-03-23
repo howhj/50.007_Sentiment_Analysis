@@ -25,7 +25,7 @@ def emission(x, y, k, training_file):
     total += k
     return ctr / total
 
-# Optimised version where data is parsed and saved in memory
+# Q3
 def parse_train(k, training_file):
     dct = {}
     lst = []
@@ -49,10 +49,10 @@ def parse_train(k, training_file):
                     lst.append(x)
     return dct, lst
 
+# Uses data stored in memory instead
 def emission_dct(x, y, dct):
     return dct[y][x] / dct[y]["count"]
 
-# Q3, based on optimised version
 def sentiment_analysis(dct, wordlist, testing_file, output_file):
     lst = []
     probs = {}
@@ -87,15 +87,17 @@ def sentiment_analysis(dct, wordlist, testing_file, output_file):
     with open(output_file, "w") as fout:
         fout.writelines(lst)
 
-x = "#UNK#"
-y = "O"
-k = 1
-training_file = "./EN/train"
-testing_file = "./EN/dev.in"
-output_file = "./EN/dev.p1.out"
 
-#print(emission(x, y, k, training_file))
-dct, lst = parse_train(k, training_file)
-#print(emission_dct(x, y, dct))
+def __main__():
+    x = "#UNK#"
+    y = "O"
+    k = 1
+    training_file = "./EN/train"
+    testing_file = "./EN/dev.in"
+    output_file = "./EN/dev.p1.out"
 
-sentiment_analysis(dct, lst, testing_file, output_file)
+    #print(emission(x, y, k, training_file))
+    dct, lst = parse_train(k, training_file)
+    #print(emission_dct(x, y, dct))
+
+    sentiment_analysis(dct, lst, testing_file, output_file)
