@@ -2,7 +2,7 @@
 
 def _construct_transition_table(training_file):
     
-    etable = {}
+    transtable = {}
     prev_y = "START"
     with open(training_file, 'r') as f:
         lines = f.readlines()
@@ -12,39 +12,39 @@ def _construct_transition_table(training_file):
                 if prev_y == "STOP":
                     prev_y == "START"
                 y = temp[1]
-                if not y in etable:
-                    etable[y] = {"count": 1}
+                if not y in transtable:
+                    transtable[y] = {"count": 1}
                 else:
-                    etable[y]["count"] += 1
-                if not prev_y in etable[y]:
-                    etable[y][prev_y] = 1
+                    transtable[y]["count"] += 1
+                if not prev_y in transtable[y]:
+                    transtable[y][prev_y] = 1
                 else:
-                    etable[y][prev_y] += 1
+                    transtable[y][prev_y] += 1
                 prev_y = temp[1]
             else:
                 y = "STOP"
-                if not y in etable:
-                    etable[y] = {"count": 1}
+                if not y in transtable:
+                    transtable[y] = {"count": 1}
                 else:
-                    etable[y]["count"] += 1
-                if not prev_y in etable[y]:
-                    etable[y][prev_y] = 1
+                    transtable[y]["count"] += 1
+                if not prev_y in transtable[y]:
+                    transtable[y][prev_y] = 1
                 else:
-                    etable[y][prev_y] += 1
+                    transtable[y][prev_y] += 1
                 prev_y = "STOP"
                 
 
-def transition(x, y, etable):
+def transition(x, y, transtable):
     
     numerator = 0
-    for k, v in etable.items():
+    for k, v in transtable.items():
         if k == y:
-            for z,t in etable[k].items(): 
+            for z,t in transtable[k].items(): 
                 if z == x:
                     numerator = t
                 break
             break
-    return numerator / etable[y]["count"]              
+    return numerator / transtable[y]["count"]              
 
 
 
@@ -114,7 +114,7 @@ def viterbi(obs_list, states_list, trans_dict, emit_dict):
 
     # Follow the best_parent table to find the sequence of hidden states that yield the highest probability 
     best_path = [max_index]
-    for t in range(len(obs_list)-1, 0, -1):
+    for t in range(len(obs_list)-1, 1, -1):
         best_path.append(best_parent[best_path[-1], t])
     #Add starting index which is always state 0, representing "START"
     best_path.append(0)
