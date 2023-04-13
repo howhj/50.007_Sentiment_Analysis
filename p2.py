@@ -97,7 +97,7 @@ def viterbi(obs_list, states_list, trans_dict, emit_dict):
                 max_prob = prob
                 max_index = i
         # Last column of viterbi table is all 0 except "STOP" hidden state and each hidden state best_parent is set to -1 since
-        # the last column cannot take on any other hidden states except "STOP" whose best_parent is max_index
+        # the last column cannot take on any other hidden states except "STOP", whose best_parent is max_index
         for i, s in enumerate(states_list):
             if (s == "STOP"):
                 V[i, len[obs_list]-1] = max_prob
@@ -121,6 +121,7 @@ def viterbi(obs_list, states_list, trans_dict, emit_dict):
     return best_path, max_prob
 
 # Todo: 
+# Convert best_path to actual states (neutral etc) not just the index representing the state
 # Create obs_list, states_list, trans_dict and emit_dict from previous question parts
 # Report the precision, recall and F scores of all systems
 # Fix numerical underflow
