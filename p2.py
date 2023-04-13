@@ -66,7 +66,7 @@ def viterbi(obs_list, states_list, trans_dict, emit_dict):
     best_parent = np.zeros((len(states_list), len(obs_list)), dtype=int)
 
     # Set the initial probabilities
-    # First column of viterbi table is all 0 except "START" hidden state and each hidden state best_parent except "START" is set to -1 
+    # First column of viterbi table is all 0 except "START" hidden state and each hidden state best_parent is set to -1 
     # since the column is the starting state
     for i, s in enumerate(states_list):
         if (s == "START"):
