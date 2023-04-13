@@ -53,12 +53,12 @@ def transition(x, y, etable):
 import numpy as np
 def viterbi(obs_list, states_list, trans_dict, emit_dict):
     """
-    Viterbi algorithm for finding the most likely sequence of hidden states that generated a sequence of observations
+    Viterbi algorithm for finding the most likely sequence of hidden states that generated a sequence of observed states
 
-    :param obs_list: a list of obs
+    :param obs_list: a list of observed states
     :param states_list: a list of possible hidden states
     :param trans_dict: a dict representing the transition probabilities between hidden states
-    :param emit_dict: a dict representing the emission probabilities of each obs from each hidden state
+    :param emit_dict: a dict representing the emission probabilities of each observed state from each hidden state
     :return: a tuple consisting of the most likely sequence of hidden states and the probability of that sequence
     """
     # Initialize the viterbi table and the best_parent (parent that gives the highest probability) table
