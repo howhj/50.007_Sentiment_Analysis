@@ -52,7 +52,7 @@ import numpy as np
 #Q2
 def viterbi(obs_list, states_list, trans_dict, emit_dict):
     """
-    Viterbi algorithm for finding the most likely sequence of hidden states_list that generated a sequence of obs_listervations.
+    Viterbi algorithm for finding the most likely sequence of hidden states that generated a sequence of observations
 
     :param obs_list: a list of obs
     :param states_list: a list of possible hidden states
@@ -65,7 +65,7 @@ def viterbi(obs_list, states_list, trans_dict, emit_dict):
     best_parent = np.zeros((len(states_list), len(obs_list)), dtype=int)
 
     # Set the initial probabilities
-    # First column of viterbi table is all 0 except "START" hidden state and all best_parent are set to -1 since
+    # First column of viterbi table is all 0 except "START" hidden state and each hidden state best_parent is set to -1 since
     # the column is the starting state
     for i, s in enumerate(states_list):
         if (s == "START"):
@@ -96,7 +96,7 @@ def viterbi(obs_list, states_list, trans_dict, emit_dict):
             if prob > max_prob:
                 max_prob = prob
                 max_index = i
-        # Last column of viterbi table is all 0 except "STOP" hidden state and all best_parent are set to -1 since
+        # Last column of viterbi table is all 0 except "STOP" hidden state and each hidden state best_parent is set to -1 since
         # the last column cannot take on any other hidden states except "STOP" whose best_parent is max_index
         for i, s in enumerate(states_list):
             if (s == "STOP"):
