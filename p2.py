@@ -114,10 +114,8 @@ def viterbi(obs_list, states_list, trans_dict, emit_dict):
 
     # Follow the best_parent table to find the sequence of hidden states that yield the highest probability 
     best_path = [max_index]
-    for t in range(len(obs_list)-1, 1, -1):
+    for t in range(len(obs_list)-1, 0, -1):
         best_path.append(best_parent[best_path[-1], t])
-    #Add starting index which is always state 0, representing "START"
-    best_path.append(0)
     best_path.reverse()
 
     return best_path, max_prob
