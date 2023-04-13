@@ -66,8 +66,8 @@ def viterbi(obs_list, states_list, trans_dict, emit_dict):
     best_parent = np.zeros((len(states_list), len(obs_list)), dtype=int)
 
     # Set the initial probabilities
-    # First column of viterbi table is all 0 except "START" hidden state and each hidden state best_parent is set to -1 since
-    # the column is the starting state
+    # First column of viterbi table is all 0 except "START" hidden state and each hidden state best_parent except "START" is set to -1 
+    # since the column is the starting state
     for i, s in enumerate(states_list):
         if (s == "START"):
             V[i, 0] = 1
@@ -75,7 +75,8 @@ def viterbi(obs_list, states_list, trans_dict, emit_dict):
             V[i,0] = 0
         best_parent[i, 0] = -1
 
-    # Iterate through the obs_list and hidden states_list
+    # Iterate through the obs_list and hidden states_list and fill up the viterbi table except the last column 
+    # First column already filled above during initialising
     for t in range(1, len(obs_list) - 1):
         for j, s2 in enumerate(states_list):
             max_prob = 0
@@ -88,7 +89,7 @@ def viterbi(obs_list, states_list, trans_dict, emit_dict):
             V[j, t] = max_prob
             best_parent[j, t] = max_index
 
-    # For Final Step ("STOP" of HMM), run following code once
+    # To fill up the last column of the viterbi table, run the following code once, this is the final Step ("STOP" of HMM)
     for t in range(1):
         max_prob = 0
         max_index = 0
@@ -97,8 +98,8 @@ def viterbi(obs_list, states_list, trans_dict, emit_dict):
             if prob > max_prob:
                 max_prob = prob
                 max_index = i
-        # Last column of viterbi table is all 0 except "STOP" hidden state and each hidden state best_parent is set to -1 since
-        # the last column cannot take on any other hidden states except "STOP", whose best_parent is max_index
+        # Last column of viterbi table is all 0 except "STOP" hidden state and each hidden state best_parent except "STOP" 
+        # is set to -1 since the last column cannot take on any other hidden states except "STOP", whose best_parent is max_index
         for i, s in enumerate(states_list):
             if (s == "STOP"):
                 V[i, len[obs_list]-1] = max_prob
