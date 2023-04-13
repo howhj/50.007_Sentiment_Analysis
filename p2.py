@@ -48,13 +48,8 @@ def transition(x, y, etable):
 
 import numpy as np
 
-
-# Todo: 
-# Create obs_list, states_list, trans_dict and emit_dict from previous question parts
-# Report the precision, recall and F scores of all systems
-# Fix numerical underflow
     
-
+#Q2
 def viterbi(obs_list, states_list, trans_dict, emit_dict):
     """
     Viterbi algorithm for finding the most likely sequence of hidden states_list that generated a sequence of obs_listervations.
@@ -112,15 +107,10 @@ def viterbi(obs_list, states_list, trans_dict, emit_dict):
                 best_parent[len(states_list) - 1, len(obs_list) - 1] = - 1
         
 
-    # Find the final state with the highest probability
-    max_prob = 0
-    max_index = 0
-    for i, s in enumerate(states_list):
-        if V[i, len(obs_list)-1] > max_prob:
-            max_prob = V[i, len(obs_list)-1]
-            max_index = i
+    # Find the final state with the highest probability (which is always "STOP" state in our case) 
+    max_index = len(states_list) - 1
 
-    # Follow the best_parent table to find the sequence of hidden states that yield the highest probability
+    # Follow the best_parent table to find the sequence of hidden states that yield the highest probability 
     best_path = [max_index]
     for t in range(len(obs_list)-1, 0, -1):
         best_path.append(best_parent[best_path[-1], t])
@@ -130,3 +120,7 @@ def viterbi(obs_list, states_list, trans_dict, emit_dict):
 
     return best_path, max_prob
 
+# Todo: 
+# Create obs_list, states_list, trans_dict and emit_dict from previous question parts
+# Report the precision, recall and F scores of all systems
+# Fix numerical underflow
