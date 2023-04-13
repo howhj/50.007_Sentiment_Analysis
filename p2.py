@@ -39,12 +39,94 @@ def transition(x, y, etable):
     numerator = 0
     for k, v in etable.items():
         if k == y:
-            for z,t in etable[k].items():
+            for z,t in etable[k].items(): 
                 if z == x:
                     numerator = t
                 break
-        break
+            break
     return numerator / etable[y]["count"]              
 
+import numpy as np
 
+
+# Todo: 
+# Create obs_list, states_list, trans_dict and emit_dict from previous question parts
+# Report the precision, recall and F scores of all systems
+# Fix numerical underflow
+    
+
+def viterbi(obs_list, states_list, trans_dict, emit_dict):
+    """
+    Viterbi algorithm for finding the most likely sequence of hidden states_list that generated a sequence of obs_listervations.
+
+    :param obs_list: a list of obs_listervations
+    :param states_list: a list of possible hidden states_list
+    :param trans_dict: a dict representing the transition probabilities between hidden states_list
+    :param emit_dict: a dict representing the emission probabilities of each obs_listervation from each hidden state
+    :return: a tuple consisting of the most likely sequence of hidden states_list and the probability of that sequence
+    """
+    # Initialize the viterbi table and the best_parent (parent that gives the highest probability) table
+    V = np.zeros((len(states_list), len(obs_list)))
+    best_parent = np.zeros((len(states_list), len(obs_list)), dtype=int)
+
+    # Set the initial probabilities
+    # First column of viterbi table is all 0 except "START" hidden state and all best_parent are set to -1 to indicate no best parents since
+    # they are the starting_state
+    for i, s in enumerate(states_list):
+        if (s == "START"):
+            V[i, 0] = 1
+        else:
+            V[i,0] = 0
+        best_parent[i, 0] = -1
+
+    # Iterate through the obs_list and hidden states_list
+    for t in range(1, len(obs_list) - 1):
+        for j, s2 in enumerate(states_list):
+            max_prob = 0
+            max_index = 0
+            for i, s1 in enumerate(states_list):
+                prob = V[i, t-1] * trans_dict[s1][s2] * emit_dict[s2][obs_list[t]]
+                if prob > max_prob:
+                    max_prob = prob
+                    max_index = i
+            V[j, t] = max_prob
+            best_parent[j, t] = max_index
+
+    # For Final Step ("STOP" of HMM), run following code once
+    for t in range(1):
+        max_prob = 0
+        max_index = 0
+        for i, s1 in enumerate(states_list):
+            prob = V[i, len(obs_list) - 2] * trans_dict[s1]["STOP"] 
+            if prob > max_prob:
+                max_prob = prob
+                max_index = i
+        # Last column of viterbi table is all 0 except "STOP" hidden state and all best_parent are set to -1 to indicate no parents since
+        # the last column cannot take on any hidden states except "STOP" whose best_parent is max_index
+        for i, s in enumerate(states_list):
+            if (s == "STOP"):
+                V[i, len[obs_list]-1] = max_prob
+                best_parent[len(states_list) - 1, len(obs_list) - 1] = max_index
+            else:
+                V[i, len[obs_list]-1] = 0
+                best_parent[len(states_list) - 1, len(obs_list) - 1] = - 1
+        
+
+    # Find the final state with the highest probability
+    max_prob = 0
+    max_index = 0
+    for i, s in enumerate(states_list):
+        if V[i, len(obs_list)-1] > max_prob:
+            max_prob = V[i, len(obs_list)-1]
+            max_index = i
+
+    # Follow the best_parent table to find the sequence of hidden states that yield the highest probability
+    best_path = [max_index]
+    for t in range(len(obs_list)-1, 0, -1):
+        best_path.append(best_parent[best_path[-1], t])
+    #Add starting index which is always state 0, representing "START"
+    best_path.append(0)
+    best_path.reverse()
+
+    return best_path, max_prob
 
