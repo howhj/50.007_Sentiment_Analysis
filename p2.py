@@ -54,11 +54,11 @@ def viterbi(obs_list, states_list, trans_dict, emit_dict):
     """
     Viterbi algorithm for finding the most likely sequence of hidden states_list that generated a sequence of obs_listervations.
 
-    :param obs_list: a list of obs_listervations
-    :param states_list: a list of possible hidden states_list
-    :param trans_dict: a dict representing the transition probabilities between hidden states_list
-    :param emit_dict: a dict representing the emission probabilities of each obs_listervation from each hidden state
-    :return: a tuple consisting of the most likely sequence of hidden states_list and the probability of that sequence
+    :param obs_list: a list of obs
+    :param states_list: a list of possible hidden states
+    :param trans_dict: a dict representing the transition probabilities between hidden states
+    :param emit_dict: a dict representing the emission probabilities of each obs from each hidden state
+    :return: a tuple consisting of the most likely sequence of hidden states and the probability of that sequence
     """
     # Initialize the viterbi table and the best_parent (parent that gives the highest probability) table
     V = np.zeros((len(states_list), len(obs_list)))
