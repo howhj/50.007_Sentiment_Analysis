@@ -121,7 +121,7 @@ def viterbi(obs_list, states_list, trans_dict, emit_dict):
     return best_path, max_prob
 
 # Todo: 
-# Convert best_path to actual states (neutral etc) not just the index representing the state
 # Create obs_list, states_list, trans_dict and emit_dict from previous question parts
 # Report the precision, recall and F scores of all systems
-# Fix numerical underflow
+# Fix possible numerical underflow
+# Convert best_path to actual states (neutral etc) not just the index representing the state
