@@ -46,10 +46,11 @@ def transition(x, y, etable):
             break
     return numerator / etable[y]["count"]              
 
-import numpy as np
+
 
     
 #Q2
+import numpy as np
 def viterbi(obs_list, states_list, trans_dict, emit_dict):
     """
     Viterbi algorithm for finding the most likely sequence of hidden states that generated a sequence of observations
