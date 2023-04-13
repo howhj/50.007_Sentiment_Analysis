@@ -96,8 +96,8 @@ def viterbi(obs_list, states_list, trans_dict, emit_dict):
             if prob > max_prob:
                 max_prob = prob
                 max_index = i
-        # Last column of viterbi table is all 0 except "STOP" hidden state and all best_parent are set to -1 to indicate no parents since
-        # the last column cannot take on any hidden states except "STOP" whose best_parent is max_index
+        # Last column of viterbi table is all 0 except "STOP" hidden state and all best_parent are set to -1 since
+        # the last column cannot take on any other hidden states except "STOP" whose best_parent is max_index
         for i, s in enumerate(states_list):
             if (s == "STOP"):
                 V[i, len[obs_list]-1] = max_prob
