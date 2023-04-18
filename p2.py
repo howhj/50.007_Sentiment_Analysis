@@ -47,6 +47,7 @@ def transition(x, y, transtable):
 
 #Q2
 import numpy as np
+import p1
 def viterbi(obs_list, states_list, trans_dict, emit_dict):
     """
     Viterbi algorithm for finding the most likely sequence of hidden states that generated a sequence of observed states
@@ -111,14 +112,49 @@ def viterbi(obs_list, states_list, trans_dict, emit_dict):
 
     # Follow the best_parent table to find the sequence of hidden states that yield the highest probability 
     best_path = [max_index]
+    final_path = []
     for t in range(len(obs_list)-1, 0, -1):
         best_path.append(best_parent[best_path[-1], t])
     best_path.reverse()
+    for state in best_path:
+        final_path.append[states_list[state]]
 
-    return best_path, max_prob
+    return final_path
 
 # Todo: 
 # Create obs_list, states_list, trans_dict and emit_dict from previous question parts
+emit_dict, obs_list = p1.construct_emission_table(k, training_file)
+trans_dict, states_list = _construct_transition_table(training_file)
+# Run viterbi algorithm to get all the tags
+def viterbi_implement(emit_dict, trans_dict, states_list, wordlist, testing_file, output_file):
+    obs_list = []
+    tag = False
+    append_path = []
+    tagged = []
+    with open(testing_file, "r") as f:
+        for line in f:
+            word = line.rstrip()
+            if word == "":
+                if tag == False:
+                    obs_list.append("START")
+                    tag = True
+                elif tag == True:
+                    index = 0
+                    append_path = viterbi(obs_list, states_list, trans_dict, emit_dict)
+                    for i in range(len(append_path)):
+                        tagged.append(f"{obs_list[index]} {append_path[i]}\n")
+                        index = index + 1
+                    tagged.append("\n")
+                    obs_list.clear()
+                    obs_list.append("START")
+                continue
+            elif word in wordlist:
+                obs_list.append(word)
+            else:
+                obs_list.append("#UNK#")
+
+    with open(output_file, "w") as fout:
+        fout.writelines(tagged)
+        
 # Report the precision, recall and F scores of all systems
 # Fix possible numerical underflow
-# Convert best_path to actual states (neutral etc) not just the index representing the state
