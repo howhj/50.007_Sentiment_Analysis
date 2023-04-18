@@ -3,6 +3,7 @@
 def _construct_transition_table(training_file):
     
     transtable = {}
+    hidden_states_list = ["START"]
     prev_y = "START"
     with open(training_file, 'r') as f:
         lines = f.readlines()
@@ -21,6 +22,8 @@ def _construct_transition_table(training_file):
                 else:
                     transtable[y][prev_y] += 1
                 prev_y = temp[1]
+                if y not in hidden_states_list:
+                    hidden_states_list.append(y)                   
             else:
                 y = "STOP"
                 if not y in transtable:
@@ -32,19 +35,18 @@ def _construct_transition_table(training_file):
                 else:
                     transtable[y][prev_y] += 1
                 prev_y = "STOP"
-                
+
+    hidden_states_list.append("STOP") 
+    return transtable, hidden_states_list          
 
 def transition(x, y, transtable):
     
     numerator = 0
-    for k, v in transtable.items():
-        if k == y:
-            for z,t in transtable[k].items(): 
-                if z == x:
-                    numerator = t
-                break
+    for z,t in transtable[y].items():
+        if z == x:
+            numerator = t
             break
-    return numerator / transtable[y]["count"]              
+    return numerator / transtable[x]["count"]            
 
 
 
@@ -68,6 +70,7 @@ def viterbi(obs_list, states_list, trans_dict, emit_dict):
     # Set the initial probabilities
     # First column of viterbi table is all 0 except "START" hidden state and each hidden state best_parent is set to -1 
     # since the column is the starting state
+
     for i, s in enumerate(states_list):
         if (s == "START"):
             V[i, 0] = 1
