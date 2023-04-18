@@ -122,9 +122,11 @@ def viterbi(obs_list, states_list, trans_dict, emit_dict):
     return final_path
 
 # Todo: 
+
 # Create obs_list, states_list, trans_dict and emit_dict from previous question parts
 emit_dict, obs_list = p1.construct_emission_table(k, training_file)
 trans_dict, states_list = _construct_transition_table(training_file)
+
 # Run viterbi algorithm to get all the tags
 def viterbi_implement(emit_dict, trans_dict, states_list, wordlist, testing_file, output_file):
     obs_list = []
@@ -155,6 +157,6 @@ def viterbi_implement(emit_dict, trans_dict, states_list, wordlist, testing_file
 
     with open(output_file, "w") as fout:
         fout.writelines(tagged)
-        
+
 # Report the precision, recall and F scores of all systems
 # Fix possible numerical underflow
