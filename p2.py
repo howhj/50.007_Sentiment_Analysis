@@ -1,10 +1,11 @@
 #Q1
+        
 
 def _construct_transition_table(training_file):
     
     transtable = {}
-    hidden_states_list = ["START"]
-    prev_y = "START"
+    hidden_states_list = []
+    prev_y = "START" 
     with open(training_file, 'r') as f:
         lines = f.readlines()
         for line in lines:
@@ -12,45 +13,38 @@ def _construct_transition_table(training_file):
             if len(temp) == 2:
                 if prev_y == "STOP":
                     prev_y == "START"
-                y = temp[1]
-                if not y in transtable:
-                    transtable[y] = {"count": 1}
+                current_y = temp[1]
+                if not prev_y in transtable:
+                    transtable[prev_y] = {"count": 1}
                 else:
-                    transtable[y]["count"] += 1
-                if not prev_y in transtable[y]:
-                    transtable[y][prev_y] = 1
+                    transtable[prev_y]["count"] += 1
+                if not current_y in transtable[prev_y]:
+                    transtable[prev_y][current_y] = 1
                 else:
-                    transtable[y][prev_y] += 1
-                prev_y = temp[1]
-                if y not in hidden_states_list:
-                    hidden_states_list.append(y)                   
+                    transtable[prev_y][current_y] += 1
+                if prev_y not in hidden_states_list:
+                    hidden_states_list.append(prev_y)     
+                prev_y = current_y              
             else:
-                y = "STOP"
-                if not y in transtable:
-                    transtable[y] = {"count": 1}
+                current_y = "STOP"
+                if not prev_y in transtable:
+                    transtable[prev_y] = {"count": 1}
                 else:
-                    transtable[y]["count"] += 1
-                if not prev_y in transtable[y]:
-                    transtable[y][prev_y] = 1
+                    transtable[prev_y]["count"] += 1
+                if not current_y in transtable[prev_y]:
+                    transtable[prev_y][current_y] = 1
                 else:
-                    transtable[y][prev_y] += 1
-                prev_y = "STOP"
+                    transtable[prev_y][current_y] += 1
+                if prev_y not in hidden_states_list:
+                    hidden_states_list.append(prev_y) 
+                prev_y = current_y
 
-    hidden_states_list.append("STOP") 
-    return transtable, hidden_states_list          
+    return transtable, hidden_states_list    
 
 def transition(x, y, transtable):
-    
-    numerator = 0
-    for z,t in transtable[y].items():
-        if z == x:
-            numerator = t
-            break
-    return numerator / transtable[x]["count"]            
+    return transtable[x][y] / transtable[x]["count"]
+              
 
-
-
-    
 #Q2
 import numpy as np
 def viterbi(obs_list, states_list, trans_dict, emit_dict):
