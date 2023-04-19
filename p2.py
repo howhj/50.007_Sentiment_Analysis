@@ -1,13 +1,11 @@
 import numpy as np
 import argparse
-import p1
+from p1 import construct_emission_table
 
 #Q1
-def _construct_transition_table(k, training_file):
-    
-    transtable = {}
-    hidden_states_list = ["START", "STOP"] #, "#UNK#"]
-    special_states = ("START", "STOP")
+def construct_transition_table(training_file):
+    ttable = {}
+    states = []
     u = "START"
 
     with open(training_file, 'r') as f:
@@ -16,86 +14,78 @@ def _construct_transition_table(k, training_file):
             temp = line.split()
             if len(temp) == 2:
                 v = temp[1]
-                if not u in transtable:
-                    transtable[u] = {"count": 1} # + k, "#UNK#": 1}
-                else:
-                    transtable[u]["count"] += 1
-
-                if not v in transtable[u]:
-                    transtable[u][v] = 1
-                else:
-                    transtable[u][v] += 1
-
-                if u not in hidden_states_list and not u in special_states:
-                    hidden_states_list.append(u)
+                ttable_append(u, v, ttable, states)
                 u = v
 
             else:
-                v = "STOP"
-                if not u in transtable:
-                    transtable[u] = {"count": 1} # + k, "#UNK#": 1}
-                else:
-                    transtable[u]["count"] += 1
-
-                if not v in transtable[u]:
-                    transtable[u][v] = 1
-                else:
-                    transtable[u][v] += 1
-
-                if u not in hidden_states_list and not u in special_states:
-                    hidden_states_list.append(u)
+                ttable_append(u, "STOP", ttable, states)
                 u = "START"
 
-    return transtable, hidden_states_list    
+    return ttable, states
 
-def log_transition(u, v, transtable):
+def ttable_append(u, v, ttable, states):
+    if u not in ttable:
+        ttable[u] = {"count": 1}
+    else:
+        ttable[u]["count"] += 1
+
+    if v not in ttable[u]:
+        ttable[u][v] = 1
+    else:
+        ttable[u][v] += 1
+
+    if u not in states and u != "START" and u != "STOP":
+        states.append(u)
+
+def log_transition(u, v, ttable):
     if v == "START" or u == "STOP":
         return np.NINF
     try:
-        prob = transtable[u][v] / transtable[u]["count"]
+        prob = ttable[u][v] / ttable[u]["count"]
     except KeyError:
         return np.NINF
     return np.log(prob) if prob != 0 else np.NINF
 
 #Q2
-def viterbi(obs_list, states_list, trans_dict, emit_dict, seq):
+def viterbi(seq, states, ttable, etable):
     # Forward process
     # Init
     n = len(seq)
-    m = len(states_list)
+    m = len(states)
 
     pi = np.zeros((n+2, m+1)) # Reserve [:, m] for "START" and "STOP"
     pi[0, m] = 1 # "START"
 
-    # Iteration
+    # Manually do the first iteration due to the special row assignment for "START"
     for v in range(m):
-        pi[1, v] = inf_sum(pi[1, m],
-                          log_transition("START", states_list[v], trans_dict),
-                          log_emission(seq[0], states_list[v], emit_dict))
+        pi[1, v] = inf_sum(pi[0, m],
+                          log_transition("START", states[v], ttable),
+                          log_emission(seq[0], states[v], etable))
 
+    # Iteration
     for j in range(1, n):
         for v in range(m):
             pi[j+1, v] = np.max([inf_sum(pi[j, u],
-                                         log_transition(states_list[u], states_list[v], trans_dict),
-                                         log_emission(seq[j], states_list[v], emit_dict))
+                                         log_transition(states[u], states[v], ttable),
+                                         log_emission(seq[j], states[v], etable))
                                 for u in range(m)])
 
     # End
     pi[n+1, m] = np.max([inf_sum(pi[n, u],
-                                 log_transition(states_list[u], "STOP", trans_dict))
+                                 log_transition(states[u], "STOP", ttable))
                         for u in range(m)]) # "STOP"
 
 
     # Backtracking
     y = [None for _ in range(n)]
-    y[n-1] = states_list[np.argmax([inf_sum(pi[n, u],
-                                          log_transition(states_list[u], "STOP", trans_dict))
-                                 for u in range(m)])]
+    y[n-1] = states[np.argmax([inf_sum(pi[n, u],
+                                       log_transition(states[u], "STOP", ttable))
+                              for u in range(m)])]
 
-    for j in range(n-1, 0, -1):
-        y[j-1] = states_list[np.argmax([inf_sum(pi[j, u],
-                                              log_transition(states_list[u], y[j], trans_dict))
-                                     for u in range(m)])]
+    for j in range(n-2, -1, -1):
+        y[j] = states[np.argmax([inf_sum(pi[j+1, u],
+                                         log_transition(states[u], y[j+1], ttable))
+                                for u in range(m)])]
     return y
 
 # Helper functions
@@ -117,17 +107,19 @@ def inf_sum(*args):
     return total
 
 # Run viterbi algorithm to get all the tags
-def viterbi_implement(emit_dict, trans_dict, states_list, wordlist, testing_file, output_file):
+def main(wordlist, states, ttable, etable, testing_file, output_file, viterbi_fn):
     seq = []
     true_seq = []
     tagged = []
+
     with open(testing_file, "r") as f:
         for line in f:
             word = line.rstrip()
 
+            # Sequence ended, run Viterbi on the sequence we have
             if word == "":
                 if seq != []:
-                    tags = viterbi(wordlist, states_list, trans_dict, emit_dict, seq)
+                    tags = viterbi_fn(seq, states, ttable, etable)
                     for w, t in zip(true_seq, tags):
                         tagged.append(f"{w} {t}\n")
                     seq = []
@@ -135,11 +127,11 @@ def viterbi_implement(emit_dict, trans_dict, states_list, wordlist, testing_file
                 tagged.append("\n")
                 continue
 
+            # Otherwise, keep adding the token to the sequence
             elif word in wordlist:
-                x = word
+                seq.append(word)
             else:
-                x = "#UNK#"
-            seq.append(x)
+                seq.append("#UNK#")
             true_seq.append(word)
 
     with open(output_file, "w") as fout:
@@ -158,6 +150,6 @@ if __name__ == "__main__":
     testing_file = args.testing_file
     output_file = args.output_file
 
-    etable, wordlist = p1.construct_emission_table(k, training_file)
-    trans_dict, states_list = _construct_transition_table(k, training_file)
-    viterbi_implement(etable, trans_dict, states_list, wordlist, testing_file, output_file)
+    etable, wordlist = construct_emission_table(k, training_file)
+    ttable, states = construct_transition_table(training_file)
+    main(wordlist, states, ttable, etable, testing_file, output_file, viterbi)
