@@ -61,37 +61,41 @@ def log_transition(u, v, transtable):
 def viterbi(obs_list, states_list, trans_dict, emit_dict, seq):
     # Forward process
     # Init
-    n = len(seq) + 1
+    n = len(seq)
     m = len(states_list)
 
-    pi = np.zeros((n+2, m+1))
+    pi = np.zeros((n+2, m+1)) # Reserve [:, m] for "START" and "STOP"
     pi[0, m] = 1 # "START"
 
     # Iteration
-    for j in range(len(seq)):
+    for v in range(m):
+        pi[1, v] = inf_sum(pi[1, m],
+                          log_transition("START", states_list[v], trans_dict),
+                          log_emission(seq[0], states_list[v], emit_dict))
+
+    for j in range(1, n):
         for v in range(m):
-            pi[j+1, v] = np.max([inf_sum(pi[j, u]
-                                         + log_transition(states_list[u], states_list[v], trans_dict)
-                                         + log_emission(seq[j], states_list[v], emit_dict))
+            pi[j+1, v] = np.max([inf_sum(pi[j, u],
+                                         log_transition(states_list[u], states_list[v], trans_dict),
+                                         log_emission(seq[j], states_list[v], emit_dict))
                                 for u in range(m)])
 
     # End
-    pi[n+1, m] = np.max([inf_sum(pi[n, u]
-                                 + log_transition(states_list[u], "STOP", trans_dict))
+    pi[n+1, m] = np.max([inf_sum(pi[n, u],
+                                 log_transition(states_list[u], "STOP", trans_dict))
                         for u in range(m)]) # "STOP"
 
 
     # Backtracking
-    y = [None for _ in range(n+1)]
-    y[n] = states_list[np.argmax([inf_sum(pi[n, u]
-                                          + log_transition(states_list[u], "STOP", trans_dict))
+    y = [None for _ in range(n)]
+    y[n-1] = states_list[np.argmax([inf_sum(pi[n, u],
+                                          log_transition(states_list[u], "STOP", trans_dict))
                                  for u in range(m)])]
 
-    for j in range(n-1, -1, -1):
-        y[j] = states_list[np.argmax([inf_sum(pi[j, u]
-                                              + log_transition(states_list[u], y[j+1], trans_dict))
+    for j in range(n-1, 0, -1):
+        y[j-1] = states_list[np.argmax([inf_sum(pi[j, u],
+                                              log_transition(states_list[u], y[j], trans_dict))
                                      for u in range(m)])]
-
     return y
 
 # Helper functions
@@ -157,8 +161,3 @@ if __name__ == "__main__":
     etable, wordlist = p1.construct_emission_table(k, training_file)
     trans_dict, states_list = _construct_transition_table(k, training_file)
     viterbi_implement(etable, trans_dict, states_list, wordlist, testing_file, output_file)
-
-# Todo:
-
-# Report the precision, recall and F scores of all systems -> evalScript
-# Fix possible numerical underflow -> log likelihood
