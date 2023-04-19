@@ -62,24 +62,14 @@ def viterbi_2(seq, states, ttable, etable):
         for v in range(m):
             probs = []
             for u in range(m):
-                # Idea 3: best path up to t, then combine with transition from t to v
-                # Rejected because during backtrack, can only be used to find (j-2)th tag, so the last word's tag is unknown
-                # NEVER MIND THIS IS INSANELY GOOD HOLY SHIT
+                # Pick one, both within margin of error:
+                # Idea 1: best path up to t, then combine with transition from t to v
                 #for t in range(m):
                 #    probs.append(inf_sum(log_transition((states[t], states[u]), states[v], ttable), pi[j-1, t]))
 
                 # Idea 2: best path up to u, then combine with best transition from t to v via u
-                # Rejected because during backtrack, there's no guarantee that the (j-2)th tag will use the best t for v
-                # THIS ONE'S PRETTY GOOD TOO, WITHIN MARGIN OF ERROR
                 t_to_u_to_v = [log_transition((states[u], states[t]), states[v], ttable) for t in range(m)]
                 probs.append(inf_sum(pi[j, u], np.max(t_to_u_to_v)))
-
-                # Idea 1, from Sagepub paper: best path up to u, then combine with sum of transition from t to v via u
-                # THE PAPER WAS A LIE
-                #probs.append(inf_sum_array([inf_sum(pi[j, u],
-                #                                    log_transition((states[t], states[u]), states[v], ttable),
-                #                                    log_emission(seq[j], states[v], etable))
-                #                           for t in range(m)]))
             pi[j+2, v] = inf_sum(np.max(probs), log_emission(seq[j], states[v], etable))
 
     # End
@@ -91,9 +81,6 @@ def viterbi_2(seq, states, ttable, etable):
         t_to_u_to_v = [log_transition((states[t], states[u]), "STOP", ttable) for t in range(m)]
         probs.append(inf_sum(pi[j, u], np.max(t_to_u_to_v)))
 
-        #probs.append(inf_sum_array([inf_sum(pi[n, u],
-        #                                    log_transition((states[t], states[u]), "STOP", ttable))
-        #                           for t in range(m)]))
     pi[n+2, m] = np.max(probs)
 
 
@@ -107,21 +94,10 @@ def viterbi_2(seq, states, ttable, etable):
     y[n-1] = states[np.argmax(probs)]
 
     for j in range(n-2, -1, -1):
-        #probs = []
-        #for u in range(m):
-        #    probs.append(inf_sum(pi[j+2, u], np.max([log_transition((states[t], states[u]), y[j+1], ttable) for t in range(m)]))
         y[j] = states[np.argmax([inf_sum(pi[j+2, u],
                                          np.max([log_transition((states[t], states[u]), y[j+1], ttable) for t in range(m)]))
                                 for u in range(m)])]
     return y
-
-def inf_sum_array(arr):
-    total = 0
-    for elem in arr:
-        if np.isinf(elem):
-            return np.NINF
-        total += elem
-    return total
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Part 3")
