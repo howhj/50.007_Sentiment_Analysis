@@ -1,162 +1,164 @@
-#Q1
-        
+import numpy as np
+import argparse
+import p1
 
-def _construct_transition_table(training_file):
+#Q1
+def _construct_transition_table(k, training_file):
     
     transtable = {}
-    hidden_states_list = []
-    prev_y = "START" 
+    hidden_states_list = ["START", "STOP"] #, "#UNK#"]
+    special_states = ("START", "STOP")
+    u = "START"
+
     with open(training_file, 'r') as f:
         lines = f.readlines()
         for line in lines:
             temp = line.split()
             if len(temp) == 2:
-                if prev_y == "STOP":
-                    prev_y == "START"
-                current_y = temp[1]
-                if not prev_y in transtable:
-                    transtable[prev_y] = {"count": 1}
+                v = temp[1]
+                if not u in transtable:
+                    transtable[u] = {"count": 1} # + k, "#UNK#": 1}
                 else:
-                    transtable[prev_y]["count"] += 1
-                if not current_y in transtable[prev_y]:
-                    transtable[prev_y][current_y] = 1
+                    transtable[u]["count"] += 1
+
+                if not v in transtable[u]:
+                    transtable[u][v] = 1
                 else:
-                    transtable[prev_y][current_y] += 1
-                if prev_y not in hidden_states_list:
-                    hidden_states_list.append(prev_y)     
-                prev_y = current_y              
+                    transtable[u][v] += 1
+
+                if u not in hidden_states_list and not u in special_states:
+                    hidden_states_list.append(u)
+                u = v
+
             else:
-                current_y = "STOP"
-                if not prev_y in transtable:
-                    transtable[prev_y] = {"count": 1}
+                v = "STOP"
+                if not u in transtable:
+                    transtable[u] = {"count": 1} # + k, "#UNK#": 1}
                 else:
-                    transtable[prev_y]["count"] += 1
-                if not current_y in transtable[prev_y]:
-                    transtable[prev_y][current_y] = 1
+                    transtable[u]["count"] += 1
+
+                if not v in transtable[u]:
+                    transtable[u][v] = 1
                 else:
-                    transtable[prev_y][current_y] += 1
-                if prev_y not in hidden_states_list:
-                    hidden_states_list.append(prev_y) 
-                prev_y = current_y
+                    transtable[u][v] += 1
+
+                if u not in hidden_states_list and not u in special_states:
+                    hidden_states_list.append(u)
+                u = "START"
 
     return transtable, hidden_states_list    
 
-def transition(x, y, transtable):
-    return transtable[x][y] / transtable[x]["count"]
-              
+def log_transition(u, v, transtable):
+    if v == "START" or u == "STOP":
+        return np.NINF
+    try:
+        prob = transtable[u][v] / transtable[u]["count"]
+    except KeyError:
+        return np.NINF
+    return np.log(prob) if prob != 0 else np.NINF
 
 #Q2
-import numpy as np
-import p1
-def viterbi(obs_list, states_list, trans_dict, emit_dict):
-    """
-    Viterbi algorithm for finding the most likely sequence of hidden states that generated a sequence of observed states
+def viterbi(obs_list, states_list, trans_dict, emit_dict, seq):
+    # Forward process
+    # Init
+    n = len(seq) + 1
+    m = len(states_list)
 
-    :param obs_list: a list of observed states
-    :param states_list: a list of possible hidden states
-    :param trans_dict: a dict representing the transition probabilities between hidden states
-    :param emit_dict: a dict representing the emission probabilities of each observed state from each hidden state
-    :return: a tuple consisting of the most likely sequence of hidden states and the probability of that sequence
-    """
-    # Initialize the viterbi table and the best_parent (parent that gives the highest probability) table
-    V = np.zeros((len(states_list), len(obs_list)))
-    best_parent = np.zeros((len(states_list), len(obs_list)), dtype=int)
+    pi = np.zeros((n+2, m+1))
+    pi[0, m] = 1 # "START"
 
-    # Set the initial probabilities
-    # First column of viterbi table is all 0 except "START" hidden state and each hidden state best_parent is set to -1 
-    # since the column is the starting state
+    # Iteration
+    for j in range(len(seq)):
+        for v in range(m):
+            pi[j+1, v] = np.max([inf_sum(pi[j, u]
+                                         + log_transition(states_list[u], states_list[v], trans_dict)
+                                         + log_emission(seq[j], states_list[v], emit_dict))
+                                for u in range(m)])
 
-    for i, s in enumerate(states_list):
-        if (s == "START"):
-            V[i, 0] = 1
-        else:
-            V[i,0] = 0
-        best_parent[i, 0] = -1
+    # End
+    pi[n+1, m] = np.max([inf_sum(pi[n, u]
+                                 + log_transition(states_list[u], "STOP", trans_dict))
+                        for u in range(m)]) # "STOP"
 
-    # Iterate through the obs_list and hidden states_list and fill up the viterbi table except the last column 
-    # First column already filled above during initialising
-    for t in range(1, len(obs_list) - 1):
-        for j, s2 in enumerate(states_list):
-            max_prob = 0
-            max_index = 0
-            for i, s1 in enumerate(states_list):
-                prob = V[i, t-1] * trans_dict[s1][s2] * emit_dict[s2][obs_list[t]]
-                if prob > max_prob:
-                    max_prob = prob
-                    max_index = i
-            V[j, t] = max_prob
-            best_parent[j, t] = max_index
 
-    # To fill up the last column of the viterbi table, run the following code once, this is the final Step ("STOP" of HMM)
-    for t in range(1):
-        max_prob = 0
-        max_index = 0
-        for i, s1 in enumerate(states_list):
-            prob = V[i, len(obs_list) - 2] * trans_dict[s1]["STOP"] 
-            if prob > max_prob:
-                max_prob = prob
-                max_index = i
-        # Last column of viterbi table is all 0 except "STOP" hidden state and each hidden state best_parent except "STOP" 
-        # is set to -1 since the last column cannot take on any other hidden states except "STOP", whose best_parent is max_index
-        for i, s in enumerate(states_list):
-            if (s == "STOP"):
-                V[i, len[obs_list]-1] = max_prob
-                best_parent[len(states_list) - 1, len(obs_list) - 1] = max_index
-            else:
-                V[i, len[obs_list]-1] = 0
-                best_parent[len(states_list) - 1, len(obs_list) - 1] = - 1
-        
+    # Backtracking
+    y = [None for _ in range(n+1)]
+    y[n] = states_list[np.argmax([inf_sum(pi[n, u]
+                                          + log_transition(states_list[u], "STOP", trans_dict))
+                                 for u in range(m)])]
 
-    # Find the final state with the highest probability (which is always "STOP" state in our case) 
-    max_index = len(states_list) - 1
+    for j in range(n-1, -1, -1):
+        y[j] = states_list[np.argmax([inf_sum(pi[j, u]
+                                              + log_transition(states_list[u], y[j+1], trans_dict))
+                                     for u in range(m)])]
 
-    # Follow the best_parent table to find the sequence of hidden states that yield the highest probability 
-    best_path = [max_index]
-    final_path = []
-    for t in range(len(obs_list)-1, 0, -1):
-        best_path.append(best_parent[best_path[-1], t])
-    best_path.reverse()
-    for state in best_path:
-        final_path.append[states_list[state]]
+    return y
 
-    return final_path
+# Helper functions
+def log_emission(x, y, etable):
+    if y == "START" or y == "STOP":
+        return np.NINF
+    try:
+        prob = etable[y][x] / etable[y]["count"]
+    except KeyError:
+        return np.NINF
+    return np.log(prob) if prob != 0 else np.NINF
 
-# Todo: 
-
-# Create obs_list, states_list, trans_dict and emit_dict from previous question parts
-emit_dict, obs_list = p1.construct_emission_table(k, training_file)
-trans_dict, states_list = _construct_transition_table(training_file)
+def inf_sum(*args):
+    total = 0
+    for arg in args:
+        if np.isinf(arg):
+            return np.NINF
+        total += arg
+    return total
 
 # Run viterbi algorithm to get all the tags
 def viterbi_implement(emit_dict, trans_dict, states_list, wordlist, testing_file, output_file):
-    obs_list = []
-    tag = False
-    append_path = []
+    seq = []
+    true_seq = []
     tagged = []
     with open(testing_file, "r") as f:
         for line in f:
             word = line.rstrip()
+
             if word == "":
-                if tag == False:
-                    obs_list.append("START")
-                    tag = True
-                elif tag == True:
-                    index = 0
-                    append_path = viterbi(obs_list, states_list, trans_dict, emit_dict)
-                    for i in range(len(append_path)):
-                        tagged.append(f"{obs_list[index]} {append_path[i]}\n")
-                        index = index + 1
-                    tagged.append("\n")
-                    obs_list.clear()
-                    obs_list.append("START")
+                if seq != []:
+                    tags = viterbi(wordlist, states_list, trans_dict, emit_dict, seq)
+                    for w, t in zip(true_seq, tags):
+                        tagged.append(f"{w} {t}\n")
+                    seq = []
+                    true_seq = []
+                tagged.append("\n")
                 continue
+
             elif word in wordlist:
-                obs_list.append(word)
+                x = word
             else:
-                obs_list.append("#UNK#")
+                x = "#UNK#"
+            seq.append(x)
+            true_seq.append(word)
 
     with open(output_file, "w") as fout:
         fout.writelines(tagged)
 
-# Report the precision, recall and F scores of all systems
-# Fix possible numerical underflow
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description = "Part 2")
+    parser.add_argument("k", type = int, help = "Smoothing factor.")
+    parser.add_argument("training_file", metavar = "train", type = str, help = "Path to the file with training data.")
+    parser.add_argument("testing_file", metavar = "test", type = str, help = "Path to the file with testing data.")
+    parser.add_argument("output_file", metavar = "out", type = str, help = "Path to the file for storing predicted results.")
+
+    args = parser.parse_args()
+    k = args.k
+    training_file = args.training_file
+    testing_file = args.testing_file
+    output_file = args.output_file
+
+    etable, wordlist = p1.construct_emission_table(k, training_file)
+    trans_dict, states_list = _construct_transition_table(k, training_file)
+    viterbi_implement(etable, trans_dict, states_list, wordlist, testing_file, output_file)
+
+# Todo:
+
+# Report the precision, recall and F scores of all systems -> evalScript
+# Fix possible numerical underflow -> log likelihood
