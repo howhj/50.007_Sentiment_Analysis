@@ -53,7 +53,7 @@ def viterbi_2(seq, states, ttable, etable):
 
     # Manually do the first iteration due to the special row assignment for "START"
     for v in range(m):
-        pi[2, v] = inf_sum(pi[0, m], #
+        pi[2, v] = inf_sum(pi[1, m],
                           log_transition(("START", "START"), states[v], ttable),
                           log_emission(seq[0], states[v], etable))
 
@@ -62,41 +62,33 @@ def viterbi_2(seq, states, ttable, etable):
         for v in range(m):
             probs = []
             for u in range(m):
-                # Pick one, both within margin of error:
-                # Idea 1: best path up to t, then combine with transition from t to v
-                #for t in range(m):
-                #    probs.append(inf_sum(log_transition((states[t], states[u]), states[v], ttable), pi[j-1, t]))
-
-                # Idea 2: best path up to u, then combine with best transition from t to v via u
-                t_to_u_to_v = [log_transition((states[u], states[t]), states[v], ttable) for t in range(m)]
-                probs.append(inf_sum(pi[j, u], np.max(t_to_u_to_v)))
+                t_to_v = [log_transition((states[t], states[u]), states[v], ttable) for t in range(m)]
+                probs.append(inf_sum(pi[j, u], np.max(t_to_v)))
             pi[j+2, v] = inf_sum(np.max(probs), log_emission(seq[j], states[v], etable))
 
     # End
     probs = []
     for u in range(m):
-        #for t in range(m):
-        #    probs.append(inf_sum(log_transition((states[t], states[u]), "STOP", ttable), pi[j-1, t]))
-
-        t_to_u_to_v = [log_transition((states[t], states[u]), "STOP", ttable) for t in range(m)]
-        probs.append(inf_sum(pi[j, u], np.max(t_to_u_to_v)))
-
+        t_to_v = [log_transition((states[t], states[u]), "STOP", ttable) for t in range(m)]
+        probs.append(inf_sum(pi[n+1, u], np.max(t_to_v)))
     pi[n+2, m] = np.max(probs)
 
 
     # Backtracking
     y = [None for _ in range(n)]
-    probs = []
-    for u in range(m):
-        probs.append(inf_sum_array([inf_sum(pi[n, u],
-                                            log_transition((states[t], states[u]), "STOP", ttable))
-                                   for t in range(m)]))
+    #probs = []
+    #for u in range(m):
+    #    t_to_v = [log_transition((states[t], states[u]), "STOP", ttable) for t in range(m)]
+    #    probs.append(inf_sum(pi[n+1, u], np.max(t_to_v)))
     y[n-1] = states[np.argmax(probs)]
 
     for j in range(n-2, -1, -1):
-        y[j] = states[np.argmax([inf_sum(pi[j+2, u],
-                                         np.max([log_transition((states[t], states[u]), y[j+1], ttable) for t in range(m)]))
-                                for u in range(m)])]
+        probs = []
+        for u in range(m):
+            t_to_v = [log_transition((states[t], states[u]), y[j+1], ttable) for t in range(m)]
+            probs.append(inf_sum(pi[j+2, u], np.max(t_to_v)))
+        y[j] = states[np.argmax(probs)]
+
     return y
 
 if __name__ == "__main__":
