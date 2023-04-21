@@ -1,0 +1,97 @@
+HMM3 EN
+
+#Entity in gold data: 802
+#Entity in prediction: 930
+
+#Correct Entity : 533
+Entity  precision: 0.5731
+Entity  recall: 0.6646
+Entity  F: 0.6155
+
+#Correct Sentiment : 421
+Sentiment  precision: 0.4527
+Sentiment  recall: 0.5249
+Sentiment  F: 0.4861
+
+
+
+HMM3 FR
+
+#Entity in gold data: 238
+#Entity in prediction: 573
+
+#Correct Entity : 181
+Entity  precision: 0.3159
+Entity  recall: 0.7605
+Entity  F: 0.4464
+
+#Correct Sentiment : 93
+Sentiment  precision: 0.1623
+Sentiment  recall: 0.3908
+Sentiment  F: 0.2293
+
+
+
+HMM3 copy EN
+
+#Entity in gold data: 802
+#Entity in prediction: 642
+
+#Correct Entity : 419
+Entity  precision: 0.6526
+Entity  recall: 0.5224
+Entity  F: 0.5803
+
+#Correct Sentiment : 373
+Sentiment  precision: 0.5810
+Sentiment  recall: 0.4651
+Sentiment  F: 0.5166
+
+HMM3 copy FR
+
+#Entity in gold data: 238
+#Entity in prediction: 56
+
+#Correct Entity : 35
+Entity  precision: 0.6250
+Entity  recall: 0.1471
+Entity  F: 0.2381
+
+#Correct Sentiment : 18
+Sentiment  precision: 0.3214
+Sentiment  recall: 0.0756
+Sentiment  F: 0.1224
+
+
+
+Part 3 copy EN
+
+#Entity in gold data: 802
+#Entity in prediction: 690
+
+#Correct Entity : 453
+Entity  precision: 0.6565
+Entity  recall: 0.5648
+Entity  F: 0.6072
+
+#Correct Sentiment : 408
+Sentiment  precision: 0.5913
+Sentiment  recall: 0.5087
+Sentiment  F: 0.5469
+
+
+
+Part 3 copy FR
+
+#Entity in gold data: 238
+#Entity in prediction: 57
+
+#Correct Entity : 35
+Entity  precision: 0.6140
+Entity  recall: 0.1471
+Entity  F: 0.2373
+
+#Correct Sentiment : 19
+Sentiment  precision: 0.3333
+Sentiment  recall: 0.0798
+Sentiment  F: 0.1288
