@@ -1,4 +1,4 @@
-# 50007-Sentiment-Analysis
+# 50.007 Sentiment Analysis
 
 This is the group project for the term 6 50.007 course. The goal was to try various algorithms to perform sentiment analysis, with the main focus on hidden Markov models.
 
